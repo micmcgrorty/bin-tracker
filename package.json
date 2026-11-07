@@ -4,7 +4,8 @@
 	"type": "module",
 	"scripts": {
 		"dev": "node --watch --import remix/node-tsx server.ts",
-		"start": "NODE_ENV=production node --import remix/node-tsx server.ts"
+		"start": "NODE_ENV=production node --import remix/node-tsx server.ts",
+		"test": "remix test"
 	},
 	"engines": {
 		"node": ">=24.3.0"
