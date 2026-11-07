@@ -3,11 +3,9 @@ import { css } from "remix/component";
 
 import type { CollectionSchedule } from "../data/collection-schedule.ts";
 import { Collections } from "../ui/collections.tsx";
+import { FONT_STACK } from "../ui/styles.ts";
 import { theme } from "../ui/theme.ts";
 import { Document } from "./document.tsx";
-
-const FONT_STACK =
-	"'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif";
 
 export function HomePage(handle: Handle<{ data: CollectionSchedule }>) {
 	return () => {
@@ -78,16 +76,6 @@ function HomeHead() {
 	return () => (
 		<>
 			<meta name="description" content="Upcoming bin collection days." />
-			<link rel="preconnect" href="https://fonts.googleapis.com" />
-			<link
-				rel="preconnect"
-				href="https://fonts.gstatic.com"
-				crossOrigin="anonymous"
-			/>
-			<link
-				rel="stylesheet"
-				href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap"
-			/>
 		</>
 	);
 }

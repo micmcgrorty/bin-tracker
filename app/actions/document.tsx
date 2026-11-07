@@ -1,10 +1,12 @@
 import type { Handle, RemixNode } from "remix/component";
 import { css } from "remix/component";
 
+import { FONT_FACES } from "../ui/styles.ts";
 import { DARK, LIGHT, paletteRule } from "../ui/theme.ts";
 
-/** The theme palettes, light by default and dark when the system asks. */
-const THEME_STYLES = `${paletteRule(LIGHT)}
+/** Site-wide rules: the font faces, then the theme palettes (light by default, dark when the system asks). */
+const SITE_STYLES = `${FONT_FACES}
+${paletteRule(LIGHT)}
 @media (prefers-color-scheme: dark) {
 ${paletteRule(DARK)}
 }`;
@@ -27,7 +29,14 @@ export function Document(handle: Handle<DocumentProps>) {
 					<meta name="color-scheme" content="light dark" />
 					<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 					<title>{title}</title>
-					<style>{THEME_STYLES}</style>
+					<link
+						rel="preload"
+						href="/fonts/bricolage-grotesque-latin.woff2"
+						as="font"
+						type="font/woff2"
+						crossOrigin="anonymous"
+					/>
+					<style>{SITE_STYLES}</style>
 					{head}
 				</head>
 				<body mix={css({ margin: 0 })}>{children}</body>
