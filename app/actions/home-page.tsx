@@ -3,6 +3,7 @@ import { css } from "remix/component";
 
 import type { CollectionSchedule } from "../data/collection-schedule.ts";
 import { Collections } from "../ui/collections.tsx";
+import { theme } from "../ui/theme.ts";
 import { Document } from "./document.tsx";
 
 const FONT_STACK =
@@ -16,28 +17,12 @@ export function HomePage(handle: Handle<{ data: CollectionSchedule }>) {
 			<Document title="Bin Day" head={<HomeHead />}>
 				<main
 					mix={css({
-						"--bg": "#f5f7fa",
-						"--surface": "#ffffff",
-						"--text": "#101826",
-						"--muted": "#46526a",
-						"--accent": "#005eb8",
-						"--rule": "#cbd5e3",
-						"--soon": "#218410",
-						"@media (prefers-color-scheme: dark)": {
-							"--bg": "#0e1522",
-							"--surface": "#17223a",
-							"--text": "#e8eef7",
-							"--muted": "#a9b6c9",
-							"--accent": "#5ba3ff",
-							"--rule": "#2a3750",
-							"--soon": "#4ade80",
-						},
 						"& *, & *::before, & *::after": { boxSizing: "border-box" },
 						margin: 0,
 						padding: "64px 20px",
 						minHeight: "100vh",
-						background: "var(--bg)",
-						color: "var(--text)",
+						background: theme.bg,
+						color: theme.text,
 						fontFamily: FONT_STACK,
 						fontSize: "16px",
 						lineHeight: 1.5,
@@ -74,9 +59,9 @@ export function HomePage(handle: Handle<{ data: CollectionSchedule }>) {
 								mix={css({
 									margin: 0,
 									padding: "16px 20px",
-									border: "2px solid #b42318",
+									border: `2px solid ${theme.alert}`,
 									borderRadius: "10px",
-									background: "var(--surface)",
+									background: theme.surface,
 								})}
 							>
 								{data.message}
