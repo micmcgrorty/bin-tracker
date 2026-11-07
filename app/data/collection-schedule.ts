@@ -2,6 +2,7 @@ const PLACE_ID =
 	process.env.RECOLLECT_PLACE_ID ?? "D338DAD4-D4AF-11F0-9DA3-EE0251E5C8E1";
 const SERVICE_ID = process.env.RECOLLECT_SERVICE_ID ?? "50013";
 const LOOKAHEAD_DAYS = 42;
+const LATER_LIMIT = 4;
 
 type RawFlag = {
 	id: number;
@@ -17,10 +18,16 @@ type RawEvent = {
 };
 
 export type Bin = { id: number; label: string; colour: string };
-export type Collection = { day: string; bins: Bin[] };
+export type Collection = {
+	day: string; // YYYY-MM-DD
+	label: string; // "Today", "Tomorrow", "In 5 days"
+	date: string; // "Wednesday 11 November"
+	soon: boolean;
+	bins: Bin[];
+};
 
 export type CollectionSchedule =
-	| { ok: true; today: string; collections: Collection[] }
+	| { ok: true; next: Collection | null; later: Collection[] }
 	| { ok: false; message: string };
 
 export type ScheduleDependencies = {
@@ -41,6 +48,25 @@ function addDays(day: string, n: number): string {
 	let date = new Date(`${day}T00:00:00Z`);
 	date.setUTCDate(date.getUTCDate() + n);
 	return date.toISOString().slice(0, 10);
+}
+
+function relativeLabel(day: string, today: string): string {
+	if (day === today) return "Today";
+	if (day === addDays(today, 1)) return "Tomorrow";
+	let diff = Math.round(
+		(Date.parse(`${day}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) /
+			86_400_000,
+	);
+	return `In ${diff} days`;
+}
+
+function formatDay(day: string): string {
+	return new Intl.DateTimeFormat("en-GB", {
+		weekday: "long",
+		day: "numeric",
+		month: "long",
+		timeZone: "UTC",
+	}).format(new Date(`${day}T00:00:00Z`));
 }
 
 export async function loadCollectionSchedule({
@@ -91,8 +117,11 @@ export async function loadCollectionSchedule({
 		flagsByDay.set(event.day, flags);
 	}
 
-	let collections: Collection[] = [...flagsByDay].map(([day, flags]) => ({
+	let [next = null, ...later] = [...flagsByDay].map(([day, flags]) => ({
 		day,
+		label: relativeLabel(day, today),
+		date: formatDay(day),
+		soon: day === today || day === addDays(today, 1),
 		bins: [...flags.values()]
 			.sort((a, b) => a.sort_order - b.sort_order)
 			.map((flag) => ({
@@ -102,5 +131,5 @@ export async function loadCollectionSchedule({
 			})),
 	}));
 
-	return { ok: true, today, collections };
+	return { ok: true, next, later: later.slice(0, LATER_LIMIT) };
 }
