@@ -8,31 +8,6 @@ import type {
 } from "../data/collection-schedule.ts";
 import { Document } from "./document.tsx";
 
-function addDays(day: string, n: number): string {
-	let date = new Date(`${day}T00:00:00Z`);
-	date.setUTCDate(date.getUTCDate() + n);
-	return date.toISOString().slice(0, 10);
-}
-
-function relativeLabel(day: string, today: string): string {
-	if (day === today) return "Today";
-	if (day === addDays(today, 1)) return "Tomorrow";
-	let diff = Math.round(
-		(Date.parse(`${day}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) /
-			86_400_000,
-	);
-	return `In ${diff} days`;
-}
-
-function formatDay(day: string): string {
-	return new Intl.DateTimeFormat("en-GB", {
-		weekday: "long",
-		day: "numeric",
-		month: "long",
-		timeZone: "UTC",
-	}).format(new Date(`${day}T00:00:00Z`));
-}
-
 const FONT_STACK =
 	"'Bricolage Grotesque', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif";
 
@@ -95,7 +70,7 @@ export function HomePage(handle: Handle<{ data: CollectionSchedule }>) {
 						</h1>
 
 						{data.ok ? (
-							<Collections today={data.today} collections={data.collections} />
+							<Collections next={data.next} later={data.later} />
 						) : (
 							<p
 								role="alert"
@@ -137,18 +112,14 @@ function HomeHead() {
 }
 
 function Collections(
-	handle: Handle<{ today: string; collections: Collection[] }>,
+	handle: Handle<{ next: Collection | null; later: Collection[] }>,
 ) {
 	return () => {
-		let { today, collections } = handle.props;
-		let [next, ...rest] = collections;
-		let later = rest.slice(0, 4);
+		let { next, later } = handle.props;
 
 		if (!next) {
 			return <p mix={css({ margin: 0 })}>No upcoming collections found.</p>;
 		}
-
-		let soon = next.day === today || next.day === addDays(today, 1);
 
 		return (
 			<>
@@ -158,7 +129,9 @@ function Collections(
 						padding: "28px",
 						borderRadius: "14px",
 						background: "var(--surface)",
-						border: soon ? "2px solid var(--soon)" : "2px solid var(--rule)",
+						border: next.soon
+							? "2px solid var(--soon)"
+							: "2px solid var(--rule)",
 						display: "flex",
 						flexDirection: "column",
 						gap: "6px",
@@ -186,7 +159,7 @@ function Collections(
 							lineHeight: 1.1,
 						})}
 					>
-						{relativeLabel(next.day, today)}
+						{next.label}
 					</p>
 					<p
 						mix={css({
@@ -195,7 +168,7 @@ function Collections(
 							fontSize: "18px",
 						})}
 					>
-						{formatDay(next.day)}
+						{next.date}
 					</p>
 					<BinChips bins={next.bins} large />
 				</section>
@@ -249,12 +222,12 @@ function Collections(
 										})}
 									>
 										<span mix={css({ fontWeight: 700 })}>
-											{relativeLabel(collection.day, today)}
+											{collection.label}
 										</span>
 										<span
 											mix={css({ fontSize: "15px", color: "var(--muted)" })}
 										>
-											{formatDay(collection.day)}
+											{collection.date}
 										</span>
 									</div>
 									<BinChips bins={collection.bins} />

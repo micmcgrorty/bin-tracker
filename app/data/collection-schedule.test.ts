@@ -25,6 +25,117 @@ describe("loadCollectionSchedule", () => {
 		assert.ok(fetch.mock.calls[0].arguments[1]?.signal);
 	});
 
+	describe("describing collections", () => {
+		it("describes a collection today as the next collection, due soon", async (testContext) => {
+			let fetch = testContext.mock.fn(async () =>
+				Response.json({
+					events: [
+						{
+							day: "2026-11-11",
+							flags: [{ id: 1, subject: "Black bin", sort_order: 1 }],
+						},
+					],
+				}),
+			);
+
+			let schedule = await loadCollectionSchedule({
+				fetch,
+				now: new Date("2026-11-11T09:00:00Z"),
+			});
+
+			assert.deepEqual(schedule, {
+				ok: true,
+				next: {
+					day: "2026-11-11",
+					label: "Today",
+					date: "Wednesday 11 November",
+					soon: true,
+					bins: [{ id: 1, label: "Black bin", colour: "#333333" }],
+				},
+				later: [],
+			});
+		});
+	});
+
+	it("lists at most four later collections", async (testContext) => {
+		let fetch = testContext.mock.fn(async () =>
+			Response.json({
+				events: [
+					{
+						day: "2026-11-12",
+						flags: [{ id: 1, subject: "Week 1", sort_order: 1 }],
+					},
+					{
+						day: "2026-11-18",
+						flags: [{ id: 2, subject: "Week 2", sort_order: 1 }],
+					},
+					{
+						day: "2026-11-25",
+						flags: [{ id: 3, subject: "Week 3", sort_order: 1 }],
+					},
+					{
+						day: "2026-12-02",
+						flags: [{ id: 4, subject: "Week 4", sort_order: 1 }],
+					},
+					{
+						day: "2026-12-09",
+						flags: [{ id: 5, subject: "Week 5", sort_order: 1 }],
+					},
+					{
+						day: "2026-12-16",
+						flags: [{ id: 6, subject: "Week 6", sort_order: 1 }],
+					},
+				],
+			}),
+		);
+
+		let schedule = await loadCollectionSchedule({
+			fetch,
+			now: new Date("2026-11-11T09:00:00Z"),
+		});
+
+		assert.deepEqual(schedule, {
+			ok: true,
+			next: {
+				day: "2026-11-12",
+				label: "Tomorrow",
+				date: "Thursday 12 November",
+				soon: true,
+				bins: [{ id: 1, label: "Week 1", colour: "#333333" }],
+			},
+			later: [
+				{
+					day: "2026-11-18",
+					label: "In 7 days",
+					date: "Wednesday 18 November",
+					soon: false,
+					bins: [{ id: 2, label: "Week 2", colour: "#333333" }],
+				},
+				{
+					day: "2026-11-25",
+					label: "In 14 days",
+					date: "Wednesday 25 November",
+					soon: false,
+					bins: [{ id: 3, label: "Week 3", colour: "#333333" }],
+				},
+				{
+					day: "2026-12-02",
+					label: "In 21 days",
+					date: "Wednesday 2 December",
+					soon: false,
+					bins: [{ id: 4, label: "Week 4", colour: "#333333" }],
+				},
+				{
+					day: "2026-12-09",
+					label: "In 28 days",
+					date: "Wednesday 9 December",
+					soon: false,
+					bins: [{ id: 5, label: "Week 5", colour: "#333333" }],
+				},
+			],
+		});
+	});
+
 	describe("when ReCollect cannot be used", () => {
 		it("returns a failure when the request rejects", async (testContext) => {
 			testContext.mock.method(console, "error", () => {});
@@ -108,7 +219,16 @@ describe("loadCollectionSchedule", () => {
 	});
 
 	it("uses the date in London, which is ahead of UTC in summer", async (testContext) => {
-		let fetch = testContext.mock.fn(async () => Response.json({ events: [] }));
+		let fetch = testContext.mock.fn(async () =>
+			Response.json({
+				events: [
+					{
+						day: "2026-07-02",
+						flags: [{ id: 1, subject: "Black bin", sort_order: 1 }],
+					},
+				],
+			}),
+		);
 
 		let schedule = await loadCollectionSchedule({
 			fetch,
@@ -117,8 +237,14 @@ describe("loadCollectionSchedule", () => {
 
 		assert.deepEqual(schedule, {
 			ok: true,
-			today: "2026-07-02",
-			collections: [],
+			next: {
+				day: "2026-07-02",
+				label: "Today",
+				date: "Thursday 2 July",
+				soon: true,
+				bins: [{ id: 1, label: "Black bin", colour: "#333333" }],
+			},
+			later: [],
 		});
 	});
 
@@ -130,11 +256,7 @@ describe("loadCollectionSchedule", () => {
 			now: new Date("2026-11-11T09:00:00Z"),
 		});
 
-		assert.deepEqual(schedule, {
-			ok: true,
-			today: "2026-11-11",
-			collections: [],
-		});
+		assert.deepEqual(schedule, { ok: true, next: null, later: [] });
 	});
 
 	it("drops events dated before today", async (testContext) => {
@@ -160,13 +282,14 @@ describe("loadCollectionSchedule", () => {
 
 		assert.deepEqual(schedule, {
 			ok: true,
-			today: "2026-11-11",
-			collections: [
-				{
-					day: "2026-11-12",
-					bins: [{ id: 2, label: "Blue bin", colour: "#333333" }],
-				},
-			],
+			next: {
+				day: "2026-11-12",
+				label: "Tomorrow",
+				date: "Thursday 12 November",
+				soon: true,
+				bins: [{ id: 2, label: "Blue bin", colour: "#333333" }],
+			},
+			later: [],
 		});
 	});
 
@@ -197,18 +320,26 @@ describe("loadCollectionSchedule", () => {
 
 		assert.deepEqual(schedule, {
 			ok: true,
-			today: "2026-11-11",
-			collections: [
-				{
-					day: "2026-11-12",
-					bins: [{ id: 1, label: "Bin A", colour: "#333333" }],
-				},
+			next: {
+				day: "2026-11-12",
+				label: "Tomorrow",
+				date: "Thursday 12 November",
+				soon: true,
+				bins: [{ id: 1, label: "Bin A", colour: "#333333" }],
+			},
+			later: [
 				{
 					day: "2026-11-18",
+					label: "In 7 days",
+					date: "Wednesday 18 November",
+					soon: false,
 					bins: [{ id: 2, label: "Bin B", colour: "#333333" }],
 				},
 				{
 					day: "2026-11-25",
+					label: "In 14 days",
+					date: "Wednesday 25 November",
+					soon: false,
 					bins: [{ id: 3, label: "Bin C", colour: "#333333" }],
 				},
 			],
@@ -238,16 +369,17 @@ describe("loadCollectionSchedule", () => {
 
 		assert.deepEqual(schedule, {
 			ok: true,
-			today: "2026-11-11",
-			collections: [
-				{
-					day: "2026-11-15",
-					bins: [
-						{ id: 1, label: "Black bin", colour: "#333333" },
-						{ id: 2, label: "Food caddy", colour: "#333333" },
-					],
-				},
-			],
+			next: {
+				day: "2026-11-15",
+				label: "In 4 days",
+				date: "Sunday 15 November",
+				soon: false,
+				bins: [
+					{ id: 1, label: "Black bin", colour: "#333333" },
+					{ id: 2, label: "Food caddy", colour: "#333333" },
+				],
+			},
+			later: [],
 		});
 	});
 
@@ -274,13 +406,14 @@ describe("loadCollectionSchedule", () => {
 
 		assert.deepEqual(schedule, {
 			ok: true,
-			today: "2026-11-11",
-			collections: [
-				{
-					day: "2026-11-15",
-					bins: [{ id: 1, label: "Black bin", colour: "#333333" }],
-				},
-			],
+			next: {
+				day: "2026-11-15",
+				label: "In 4 days",
+				date: "Sunday 15 November",
+				soon: false,
+				bins: [{ id: 1, label: "Black bin", colour: "#333333" }],
+			},
+			later: [],
 		});
 	});
 
@@ -307,17 +440,18 @@ describe("loadCollectionSchedule", () => {
 
 		assert.deepEqual(schedule, {
 			ok: true,
-			today: "2026-11-11",
-			collections: [
-				{
-					day: "2026-11-12",
-					bins: [
-						{ id: 1, label: "First", colour: "#333333" },
-						{ id: 2, label: "Second", colour: "#333333" },
-						{ id: 3, label: "Third", colour: "#333333" },
-					],
-				},
-			],
+			next: {
+				day: "2026-11-12",
+				label: "Tomorrow",
+				date: "Thursday 12 November",
+				soon: true,
+				bins: [
+					{ id: 1, label: "First", colour: "#333333" },
+					{ id: 2, label: "Second", colour: "#333333" },
+					{ id: 3, label: "Third", colour: "#333333" },
+				],
+			},
+			later: [],
 		});
 	});
 
@@ -350,17 +484,18 @@ describe("loadCollectionSchedule", () => {
 
 		assert.deepEqual(schedule, {
 			ok: true,
-			today: "2026-11-11",
-			collections: [
-				{
-					day: "2026-11-12",
-					bins: [
-						{ id: 1, label: "Both", colour: "#aa0001" },
-						{ id: 2, label: "ColorOnly", colour: "#cc0003" },
-						{ id: 3, label: "Neither", colour: "#333333" },
-					],
-				},
-			],
+			next: {
+				day: "2026-11-12",
+				label: "Tomorrow",
+				date: "Thursday 12 November",
+				soon: true,
+				bins: [
+					{ id: 1, label: "Both", colour: "#aa0001" },
+					{ id: 2, label: "ColorOnly", colour: "#cc0003" },
+					{ id: 3, label: "Neither", colour: "#333333" },
+				],
+			},
+			later: [],
 		});
 	});
 
@@ -376,44 +511,14 @@ describe("loadCollectionSchedule", () => {
 
 		assert.deepEqual(schedule, {
 			ok: true,
-			today: "2026-11-11",
-			collections: [{ day: "2026-11-13", bins: [] }],
-		});
-	});
-
-	it("returns a collection for an event today", async (testContext) => {
-		let fetch = testContext.mock.fn(async () =>
-			Response.json({
-				events: [
-					{
-						day: "2026-11-11",
-						flags: [
-							{
-								id: 1,
-								subject: "Black bin",
-								sort_order: 1,
-								backgroundColor: "#000000",
-							},
-						],
-					},
-				],
-			}),
-		);
-
-		let schedule = await loadCollectionSchedule({
-			fetch,
-			now: new Date("2026-11-11T09:00:00Z"),
-		});
-
-		assert.deepEqual(schedule, {
-			ok: true,
-			today: "2026-11-11",
-			collections: [
-				{
-					day: "2026-11-11",
-					bins: [{ id: 1, label: "Black bin", colour: "#000000" }],
-				},
-			],
+			next: {
+				day: "2026-11-13",
+				label: "In 2 days",
+				date: "Friday 13 November",
+				soon: false,
+				bins: [],
+			},
+			later: [],
 		});
 	});
 });
