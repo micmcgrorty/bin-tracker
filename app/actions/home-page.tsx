@@ -76,7 +76,6 @@ function HomeHead() {
 	return () => (
 		<>
 			<meta name="description" content="Upcoming bin collection days." />
-			<meta httpEquiv="refresh" content="3600" />
 		</>
 	);
 }
