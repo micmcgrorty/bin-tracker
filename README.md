@@ -18,4 +18,10 @@ A site for tracking what the next bin pickup is, built in Remix.
 npm i
 npm run dev
 npm run start
+npm run lint
+npm run lint:fix
+npm run format
+npm run format:check
+npm run type-check
+npm run test
 ```

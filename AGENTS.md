@@ -7,13 +7,16 @@ This app was scaffolded with `remix new`. Use these conventions when continuing 
 ```sh
 npm i
 npm run dev
-npm run hmr
 npm run start
-npm test
-npm run typecheck
+npm run lint
+npm run lint:fix
+npm run format
+npm run format:check
+npm run type-check
+npm run test
 ```
 
-Use `npm run hmr` for live server and browser updates; `npm run dev` only watches and restarts the server. `npm run start` runs in production mode without a separate build step.
+`npm run dev` watches and restarts the server. `npm run start` runs in production mode without a separate build step.
 
 ## Building Features
 

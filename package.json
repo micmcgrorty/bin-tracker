@@ -5,16 +5,23 @@
 	"scripts": {
 		"dev": "node --watch --import remix/node-tsx server.ts",
 		"start": "NODE_ENV=production node --import remix/node-tsx server.ts",
-		"test": "remix test"
-	},
-	"engines": {
-		"node": ">=24.3.0"
+		"test": "remix test",
+		"lint": "oxlint",
+		"lint:fix": "oxlint --fix",
+		"format": "oxfmt",
+		"format:check": "oxfmt --check",
+		"type-check": "tsc --noEmit"
 	},
 	"dependencies": {
 		"remix": "^3.1.0"
 	},
 	"devDependencies": {
 		"@types/node": "latest",
+		"oxfmt": "^0.77.0",
+		"oxlint": "^1.92.0",
 		"typescript": "latest"
+	},
+	"engines": {
+		"node": ">=24.3.0"
 	}
 }
