@@ -3,6 +3,7 @@ import { css } from "remix/component";
 
 import type { Collection } from "../data/collection-schedule.ts";
 import { BinChips } from "./bin-chips.tsx";
+import { theme } from "./theme.ts";
 
 export function Collections(
 	handle: Handle<{ next: Collection | null; later: Collection[] }>,
@@ -21,10 +22,10 @@ export function Collections(
 					mix={css({
 						padding: "28px",
 						borderRadius: "14px",
-						background: "var(--surface)",
+						background: theme.surface,
 						border: next.soon
-							? "2px solid var(--soon)"
-							: "2px solid var(--rule)",
+							? `2px solid ${theme.soon}`
+							: `2px solid ${theme.rule}`,
 						display: "flex",
 						flexDirection: "column",
 						gap: "6px",
@@ -38,7 +39,7 @@ export function Collections(
 							fontWeight: 700,
 							letterSpacing: "0.08em",
 							textTransform: "uppercase",
-							color: "var(--muted)",
+							color: theme.muted,
 						})}
 					>
 						Next collection
@@ -57,7 +58,7 @@ export function Collections(
 					<p
 						mix={css({
 							margin: "0 0 14px",
-							color: "var(--muted)",
+							color: theme.muted,
 							fontSize: "18px",
 						})}
 					>
@@ -77,7 +78,7 @@ export function Collections(
 								margin: 0,
 								fontSize: "18px",
 								fontWeight: 700,
-								color: "var(--muted)",
+								color: theme.muted,
 							})}
 						>
 							Coming up later
@@ -98,8 +99,8 @@ export function Collections(
 									mix={css({
 										padding: "14px 18px",
 										borderRadius: "10px",
-										background: "var(--surface)",
-										border: "1px solid var(--rule)",
+										background: theme.surface,
+										border: `1px solid ${theme.rule}`,
 										display: "flex",
 										flexDirection: "column",
 										gap: "10px",
@@ -117,9 +118,7 @@ export function Collections(
 										<span mix={css({ fontWeight: 700 })}>
 											{collection.label}
 										</span>
-										<span
-											mix={css({ fontSize: "15px", color: "var(--muted)" })}
-										>
+										<span mix={css({ fontSize: "15px", color: theme.muted })}>
 											{collection.date}
 										</span>
 									</div>
