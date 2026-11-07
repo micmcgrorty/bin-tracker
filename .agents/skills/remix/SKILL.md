@@ -33,37 +33,37 @@ A minimal server route can return a plain Web `Response`:
 
 ```ts
 // app/routes.ts
-import { get, route } from 'remix/routes'
+import { get, route } from "remix/routes";
 
 export const routes = route({
-  hello: get('/hello/:name'),
-})
+	hello: get("/hello/:name"),
+});
 ```
 
 ```ts
 // app/actions/controller.ts
-import { createController } from 'remix/router'
+import { createController } from "remix/router";
 
-import { routes } from '../routes.ts'
+import { routes } from "../routes.ts";
 
 export default createController(routes, {
-  actions: {
-    hello(context) {
-      return new Response(`Hello, ${context.params.name}!`)
-    },
-  },
-})
+	actions: {
+		hello(context) {
+			return new Response(`Hello, ${context.params.name}!`);
+		},
+	},
+});
 ```
 
 ```ts
 // app/router.ts
-import { createRouter } from 'remix/router'
+import { createRouter } from "remix/router";
 
-import controller from './actions/controller.ts'
-import { routes } from './routes.ts'
+import controller from "./actions/controller.ts";
+import { routes } from "./routes.ts";
 
-export const router = createRouter()
-router.map(routes, controller)
+export const router = createRouter();
+router.map(routes, controller);
 ```
 
 The runtime adapter passes requests to `router.fetch(request)`. Generate URLs from the same route contract: `routes.hello.href({ name: 'Remix' })` produces `/hello/Remix`.
@@ -73,23 +73,23 @@ The runtime adapter passes requests to `router.fetch(request)`. Generate URLs fr
 Remix components use JSX, but they are not React. A component's setup function runs once per instance and returns a render function. Local variables in setup preserve state between renders; event handlers change that state and call `handle.update()` to request another render:
 
 ```tsx
-import { on } from 'remix/component'
-import type { Handle } from 'remix/component'
+import { on } from "remix/component";
+import type { Handle } from "remix/component";
 
 function Counter(handle: Handle) {
-  let count = 0
+	let count = 0;
 
-  return () => (
-    <button
-      type="button"
-      mix={on('click', () => {
-        count++
-        handle.update()
-      })}
-    >
-      Count: {count}
-    </button>
-  )
+	return () => (
+		<button
+			type="button"
+			mix={on("click", () => {
+				count++;
+				handle.update();
+			})}
+		>
+			Count: {count}
+		</button>
+	);
 }
 ```
 
