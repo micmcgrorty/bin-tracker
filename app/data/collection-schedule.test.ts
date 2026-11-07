@@ -499,6 +499,54 @@ describe("loadCollectionSchedule", () => {
 		});
 	});
 
+	it("darkens a bin colour just enough for white text to meet WCAG AA", async (testContext) => {
+		let fetch = testContext.mock.fn(async () =>
+			Response.json({
+				events: [
+					{
+						day: "2026-11-12",
+						flags: [
+							{
+								id: 1,
+								subject: "Plastic, cans and cartons",
+								sort_order: 1,
+								backgroundColor: "#197CD7",
+							},
+							{
+								id: 2,
+								subject: "Food and Garden",
+								sort_order: 2,
+								backgroundColor: "#91330d",
+							},
+						],
+					},
+				],
+			}),
+		);
+
+		let schedule = await loadCollectionSchedule({
+			fetch,
+			now: new Date("2026-11-11T09:00:00Z"),
+		});
+
+		assert.deepEqual(schedule, {
+			ok: true,
+			next: {
+				day: "2026-11-12",
+				label: "Tomorrow",
+				date: "Thursday 12 November",
+				soon: true,
+				bins: [
+					// #197CD7 is 4.28:1 against white; #1878D1 (97%) is the first step to reach 4.5:1.
+					{ id: 1, label: "Plastic, cans and cartons", colour: "#1878D1" },
+					// Already 7.83:1, so it comes back exactly as ReCollect sent it.
+					{ id: 2, label: "Food and Garden", colour: "#91330d" },
+				],
+			},
+			later: [],
+		});
+	});
+
 	it("returns a collection with no bins for an event without flags", async (testContext) => {
 		let fetch = testContext.mock.fn(async () =>
 			Response.json({ events: [{ day: "2026-11-13" }] }),
