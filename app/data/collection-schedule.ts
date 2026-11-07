@@ -69,6 +69,42 @@ function formatDay(day: string): string {
 	}).format(new Date(`${day}T00:00:00Z`));
 }
 
+/** WCAG AA minimum contrast for normal-size text. */
+const MIN_CONTRAST = 4.5;
+
+function relativeLuminance(rgb: number[]): number {
+	let [r, g, b] = rgb.map((channel) => {
+		let value = channel / 255;
+		return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+	});
+	return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/**
+ * Bin chips use white text on the colour ReCollect gives each bin. Some of
+ * those colours are too light for white text, so darken them just enough
+ * to reach WCAG AA contrast, keeping the hue the council chose.
+ */
+function readableBehindWhiteText(hex: string): string {
+	let rgb = [1, 3, 5].map((i) => Number.parseInt(hex.slice(i, i + 2), 16));
+	if (rgb.some(Number.isNaN)) return hex;
+
+	let contrastWithWhite = (channels: number[]) =>
+		1.05 / (relativeLuminance(channels) + 0.05);
+	if (contrastWithWhite(rgb) >= MIN_CONTRAST) return hex;
+
+	let darkened = rgb;
+	for (let scale = 0.99; scale > 0; scale -= 0.01) {
+		darkened = rgb.map((channel) => Math.round(channel * scale));
+		if (contrastWithWhite(darkened) >= MIN_CONTRAST) break;
+	}
+
+	let hexChannels = darkened.map((channel) =>
+		channel.toString(16).padStart(2, "0"),
+	);
+	return `#${hexChannels.join("").toUpperCase()}`;
+}
+
 export async function loadCollectionSchedule({
 	fetch,
 	now,
@@ -127,7 +163,9 @@ export async function loadCollectionSchedule({
 			.map((flag) => ({
 				id: flag.id,
 				label: flag.subject,
-				colour: flag.backgroundColor ?? flag.color ?? "#333333",
+				colour: readableBehindWhiteText(
+					flag.backgroundColor ?? flag.color ?? "#333333",
+				),
 			})),
 	}));
 
