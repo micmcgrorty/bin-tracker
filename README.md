@@ -30,7 +30,7 @@ Then open http://localhost:44100.
 
 ## Configuration
 
-Settings come from environment variables in your shell. Nothing loads the `.env` file automatically.
+Settings come from environment variables. `npm run dev` and `npm run start` also load a `.env` file from the project root if there is one (it's gitignored). Variables already set in your shell take precedence over the file.
 
 | Variable               | Default    | Purpose                                     |
 | ---------------------- | ---------- | ------------------------------------------- |
@@ -49,7 +49,7 @@ Settings come from environment variables in your shell. Nothing loads the `.env`
 | `npm run format`     | Formats the code with oxfmt (`format:check` only checks)    |
 | `npm run type-check` | Type-checks with `tsc --noEmit`                             |
 
-`npm run start` sets `NODE_ENV` the Unix way, so on Windows run it from Git Bash or WSL rather than PowerShell or cmd.
+`npm run start` gets `NODE_ENV=production` from the committed `.env.production`, which is loaded after `.env` so it wins. That works in any shell, including PowerShell and cmd.
 
 ## Testing and CI
 

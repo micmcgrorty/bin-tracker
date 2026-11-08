@@ -3,8 +3,8 @@
 	"private": true,
 	"type": "module",
 	"scripts": {
-		"dev": "node --watch --import remix/node-tsx server.ts",
-		"start": "NODE_ENV=production node --import remix/node-tsx server.ts",
+		"dev": "node --env-file-if-exists=.env --watch --import remix/node-tsx server.ts",
+		"start": "node --env-file-if-exists=.env --env-file=.env.production --import remix/node-tsx server.ts",
 		"test": "remix test",
 		"lint": "oxlint",
 		"lint:fix": "oxlint --fix",
